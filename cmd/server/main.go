@@ -8,7 +8,7 @@ import (
 
 func main() {
 	app := fiber.New()
-	routes.SetupRoutes(app)
+	routes.SetupRoot(app)
 	err := app.Listen(3000)
 	if err != nil {
 		log.Fatal(err)
