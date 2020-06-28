@@ -1,10 +1,20 @@
 package routes
 
-import "github.com/gofiber/fiber"
+import (
+	"github.com/gofiber/fiber"
+	jwtware "github.com/gofiber/jwt"
+	"os"
+)
 
 func SetupRoot(app *fiber.App) {
 	api := app.Group("/")
 	api.Get("/", home)
-	api.Get("/login", login)
+	api.Post("/login", login)
 	api.Post("/register", register)
+
+	users := app.Group("/users")
+	users.Use(jwtware.New(jwtware.Config{
+		SigningKey: []byte(os.Getenv("JWT_SECRET")),
+	}))
+	users.Get("/list", usersList)
 }

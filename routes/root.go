@@ -1,11 +1,14 @@
 package routes
 
 import (
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gofiber/fiber"
 	"gitlab.com/tdtimur/go-fiber-template/db"
 	"gitlab.com/tdtimur/go-fiber-template/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"log"
+	"os"
+	"time"
 )
 
 type resp models.Response
@@ -58,21 +61,40 @@ func register(c *fiber.Ctx) {
 }
 
 func login(c *fiber.Ctx) {
-	var result []models.User
-	cur, err := usersColl.Find(mg.Ctx, bson.D{{}})
+	email := c.FormValue("email")
+	password := c.FormValue("password")
+	var res bson.M
+	err := usersColl.FindOne(mg.Ctx, bson.D{{"email", email}}).Decode(&res)
 	if err != nil {
 		log.Fatal(err)
 	}
-	if err = cur.All(mg.Ctx, &result); err != nil {
-		log.Fatal(err)
-	}
-	res := respList{
-		StatusCode: 200,
-		Message:    "List of users",
-		Result:     result,
-	}
-	if err := c.JSON(res); err != nil {
-		c.Status(500).Send(err)
-		return
+
+	if dbPassword := res["password"]; dbPassword != password {
+		res := resp{
+			StatusCode: 400,
+			Message:    "Password did not match",
+		}
+		if err := c.JSON(res); err != nil {
+			c.Status(500).Send(err)
+			return
+		}
+	} else {
+		token := jwt.New(jwt.SigningMethodHS256)
+		claims := token.Claims.(jwt.MapClaims)
+		claims["email"] = email
+		claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
+		t, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+
+		if err != nil {
+			log.Println(err)
+			c.SendStatus(fiber.StatusInternalServerError)
+			return
+		}
+
+		if err := c.JSON(fiber.Map{"token": t}); err != nil {
+			log.Println(err)
+			c.Status(500).Send(err)
+			return
+		}
 	}
 }

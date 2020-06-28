@@ -6,3 +6,8 @@ type User struct {
 	Email     string `json:"email",form:"email",bson:"email"`
 	Password  string `json:"password",form:"password",bson:"password"`
 }
+
+type Login struct {
+	Email    string `json:"email",form:"email",bson:"email"`
+	Password string `json:"password",form:"password",bson:"password"`
+}

@@ -10,3 +10,7 @@ type ResponseUsersList struct {
 	Message    string `json:"message"`
 	Result     []User `json:"result"`
 }
+
+type JwtToken struct {
+	Token string `json:"token"`
+}
