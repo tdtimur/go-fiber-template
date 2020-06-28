@@ -9,7 +9,7 @@ import (
 )
 
 type resp models.Response
-type respList models.ResponseList
+type respList models.ResponseUsersList
 
 var mg = db.Mg
 var usersColl = db.UsersColl
@@ -75,11 +75,4 @@ func login(c *fiber.Ctx) {
 		c.Status(500).Send(err)
 		return
 	}
-}
-
-func SetupRoot(app *fiber.App) {
-	api := app.Group("/")
-	api.Get("/", home)
-	api.Get("/login", login)
-	api.Post("/register", register)
 }

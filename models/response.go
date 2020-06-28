@@ -5,7 +5,7 @@ type Response struct {
 	Message    string `json:"message"`
 }
 
-type ResponseList struct {
+type ResponseUsersList struct {
 	StatusCode int    `json:"code"`
 	Message    string `json:"message"`
 	Result     []User `json:"result"`
