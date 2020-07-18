@@ -59,7 +59,8 @@ func register(c *fiber.Ctx) {
 	if count == 0 {
 		_, err := usersColl.InsertOne(ctx, user)
 		if err != nil {
-			log.Fatal(err)
+			log.Println(err)
+			return
 		}
 		res := resp{
 			StatusCode: 201,
