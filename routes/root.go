@@ -1,21 +1,24 @@
 package routes
 
 import (
+	"context"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gofiber/fiber"
-	"gitlab.com/tdtimur/go-fiber-template/db"
 	"gitlab.com/tdtimur/go-fiber-template/models"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
 	"os"
 	"time"
 )
 
+var pCtx = context.Background()
+var mongoHost = os.Getenv("MONGODB_HOST")
+
 type resp models.Response
 type respList models.ResponseUsersList
-
-var mg = db.Mg
-var usersColl = db.UsersColl
+type tokenResp models.JwtToken
 
 func home(c *fiber.Ctx) {
 	res := resp{
@@ -29,14 +32,30 @@ func home(c *fiber.Ctx) {
 }
 
 func register(c *fiber.Ctx) {
+	client, err := mongo.NewClient(options.Client().ApplyURI(mongoHost))
+	if err != nil {
+		log.Fatal(err)
+	}
+	ctx, _ := context.WithTimeout(pCtx, 5*time.Second)
+	defer ctx.Done()
+	err = client.Connect(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		if err := client.Disconnect(ctx); err != nil {
+			log.Fatal(err)
+		}
+	}()
+	usersColl := client.Database("api").Collection("users")
 	user := new(models.User)
 	if err := c.BodyParser(user); err != nil {
 		log.Println("Parser")
 		log.Fatal(err)
 	}
-	count, _ := usersColl.CountDocuments(mg.Ctx, bson.D{{"email", user.Email}})
+	count, _ := usersColl.CountDocuments(ctx, bson.D{{"email", user.Email}})
 	if count == 0 {
-		_, err := usersColl.InsertOne(mg.Ctx, user)
+		_, err := usersColl.InsertOne(ctx, user)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -61,10 +80,26 @@ func register(c *fiber.Ctx) {
 }
 
 func login(c *fiber.Ctx) {
+	client, err := mongo.NewClient(options.Client().ApplyURI(mongoHost))
+	if err != nil {
+		log.Fatal(err)
+	}
+	ctx, _ := context.WithTimeout(pCtx, 5*time.Second)
+	err = client.Connect(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		if err := client.Disconnect(ctx); err != nil {
+			log.Fatal(err)
+		}
+	}()
+	usersColl := client.Database("api").Collection("users")
+
 	email := c.FormValue("email")
 	password := c.FormValue("password")
 	var res bson.M
-	err := usersColl.FindOne(mg.Ctx, bson.D{{"email", email}}).Decode(&res)
+	err = usersColl.FindOne(ctx, bson.D{{"email", email}}).Decode(&res)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -91,7 +126,10 @@ func login(c *fiber.Ctx) {
 			return
 		}
 
-		if err := c.JSON(fiber.Map{"token": t}); err != nil {
+		res := tokenResp{
+			Token: t,
+		}
+		if err := c.JSON(res); err != nil {
 			log.Println(err)
 			c.Status(500).Send(err)
 			return

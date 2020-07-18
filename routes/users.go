@@ -1,19 +1,39 @@
 package routes
 
 import (
+	"context"
 	"github.com/gofiber/fiber"
 	"gitlab.com/tdtimur/go-fiber-template/models"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
+	"time"
 )
 
 func usersList(c *fiber.Ctx) {
-	var result []models.User
-	cur, err := usersColl.Find(mg.Ctx, bson.D{{}})
+	client, err := mongo.NewClient(options.Client().ApplyURI(mongoHost))
 	if err != nil {
 		log.Fatal(err)
 	}
-	if err = cur.All(mg.Ctx, &result); err != nil {
+	ctx, _ := context.WithTimeout(pCtx, 5*time.Second)
+	err = client.Connect(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		if err := client.Disconnect(ctx); err != nil {
+			log.Fatal(err)
+		}
+	}()
+	usersColl := client.Database("api").Collection("users")
+
+	var result []models.User
+	cur, err := usersColl.Find(ctx, bson.D{{}})
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err = cur.All(ctx, &result); err != nil {
 		log.Fatal(err)
 	}
 	res := respList{
