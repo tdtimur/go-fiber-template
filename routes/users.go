@@ -14,12 +14,14 @@ import (
 func usersList(c *fiber.Ctx) {
 	client, err := mongo.NewClient(options.Client().ApplyURI(mongoHost))
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return
 	}
 	ctx, _ := context.WithTimeout(pCtx, 5*time.Second)
 	err = client.Connect(ctx)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return
 	}
 	defer func() {
 		if err := client.Disconnect(ctx); err != nil {
@@ -31,10 +33,12 @@ func usersList(c *fiber.Ctx) {
 	var result []models.User
 	cur, err := usersColl.Find(ctx, bson.D{{}})
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return
 	}
 	if err = cur.All(ctx, &result); err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return
 	}
 	res := respList{
 		StatusCode: 200,

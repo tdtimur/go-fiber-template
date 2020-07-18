@@ -17,12 +17,14 @@ func Setup() *fiber.App {
 	var mongoHost = os.Getenv("MONGODB_HOST")
 	client, err := mongo.NewClient(options.Client().ApplyURI(mongoHost))
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return nil
 	}
 	ctx, _ := context.WithTimeout(pCtx, 5*time.Second)
 	err = client.Connect(ctx)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return nil
 	}
 	defer func() {
 		if err := client.Disconnect(ctx); err != nil {
