@@ -52,8 +52,8 @@ func register(c *fiber.Ctx) {
 	usersColl := client.Database("api").Collection("users")
 	user := new(models.User)
 	if err := c.BodyParser(user); err != nil {
-		log.Println("Parser")
-		log.Fatal(err)
+		log.Println(err)
+		return
 	}
 	count, _ := usersColl.CountDocuments(ctx, bson.D{{"email", user.Email}})
 	if count == 0 {
@@ -105,7 +105,8 @@ func login(c *fiber.Ctx) {
 	var res bson.M
 	err = usersColl.FindOne(ctx, bson.D{{"email", email}}).Decode(&res)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return
 	}
 
 	if dbPassword := res["password"]; dbPassword != password {
