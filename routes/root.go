@@ -34,13 +34,15 @@ func home(c *fiber.Ctx) {
 func register(c *fiber.Ctx) {
 	client, err := mongo.NewClient(options.Client().ApplyURI(mongoHost))
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return
 	}
 	ctx, _ := context.WithTimeout(pCtx, 5*time.Second)
 	defer ctx.Done()
 	err = client.Connect(ctx)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return
 	}
 	defer func() {
 		if err := client.Disconnect(ctx); err != nil {
