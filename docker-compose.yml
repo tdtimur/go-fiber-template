@@ -1,0 +1,19 @@
+version: '2'
+
+services:
+  db:
+    image: mongo:latest
+    ports:
+    - "27017:27017"
+
+  server:
+    image: gitlab.com/tdtimur/go-fiber-template:latest
+    depends_on:
+      - db
+    ports:
+    - "3000:3000"
+    environment:
+      MONGODB_HOST: mongodb://db:27017
+
+networks:
+  default:
