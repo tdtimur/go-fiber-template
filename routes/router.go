@@ -3,7 +3,7 @@ package routes
 import (
 	"github.com/gofiber/fiber"
 	jwtware "github.com/gofiber/jwt"
-	"os"
+	"gitlab.com/tdtimur/go-fiber-template/models"
 )
 
 func SetupRoot(app *fiber.App) {
@@ -14,7 +14,7 @@ func SetupRoot(app *fiber.App) {
 
 	users := app.Group("/users")
 	users.Use(jwtware.New(jwtware.Config{
-		SigningKey: []byte(os.Getenv("JWT_SECRET")),
+		SigningKey: []byte(models.Config.GetString("JWT_SECRET")),
 	}))
 	users.Get("/list", usersList)
 }

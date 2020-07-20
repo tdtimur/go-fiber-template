@@ -4,18 +4,22 @@ import (
 	"context"
 	"github.com/gofiber/cors"
 	"github.com/gofiber/fiber"
+	"gitlab.com/tdtimur/go-fiber-template/models"
 	"gitlab.com/tdtimur/go-fiber-template/routes"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
-	"os"
 	"time"
 )
 
 func Setup() *fiber.App {
 	var pCtx = context.Background()
-	var mongoHost = os.Getenv("MONGODB_HOST")
-	client, err := mongo.NewClient(options.Client().ApplyURI(mongoHost))
+	log.Printf(
+		"Preparing... MongoDB host: %s, JWT Secret: %s",
+		models.Config.GetString("MONGODB_HOST"),
+		models.Config.GetString("JWT_SECRET"),
+	)
+	client, err := mongo.NewClient(options.Client().ApplyURI(models.Config.GetString("MONGODB_HOST")))
 	if err != nil {
 		log.Println(err)
 		return nil

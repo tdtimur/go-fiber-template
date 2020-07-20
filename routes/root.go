@@ -9,12 +9,10 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
-	"os"
 	"time"
 )
 
 var pCtx = context.Background()
-var mongoHost = os.Getenv("MONGODB_HOST")
 
 type resp models.Response
 type respList models.ResponseUsersList
@@ -32,7 +30,7 @@ func home(c *fiber.Ctx) {
 }
 
 func register(c *fiber.Ctx) {
-	client, err := mongo.NewClient(options.Client().ApplyURI(mongoHost))
+	client, err := mongo.NewClient(options.Client().ApplyURI(models.Config.GetString("MONGODB_HOST")))
 	if err != nil {
 		log.Println(err)
 		return
@@ -83,7 +81,7 @@ func register(c *fiber.Ctx) {
 }
 
 func login(c *fiber.Ctx) {
-	client, err := mongo.NewClient(options.Client().ApplyURI(mongoHost))
+	client, err := mongo.NewClient(options.Client().ApplyURI(models.Config.GetString("MONGODB_HOST")))
 	if err != nil {
 		log.Println(err)
 		return
@@ -124,7 +122,7 @@ func login(c *fiber.Ctx) {
 		claims := token.Claims.(jwt.MapClaims)
 		claims["email"] = email
 		claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
-		t, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+		t, err := token.SignedString([]byte(models.Config.GetString("JWT_SECRET")))
 
 		if err != nil {
 			log.Println(err)

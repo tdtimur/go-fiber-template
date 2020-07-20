@@ -12,7 +12,7 @@ import (
 )
 
 func usersList(c *fiber.Ctx) {
-	client, err := mongo.NewClient(options.Client().ApplyURI(mongoHost))
+	client, err := mongo.NewClient(options.Client().ApplyURI(models.Config.GetString("MONGODB_HOST")))
 	if err != nil {
 		log.Println(err)
 		return
